@@ -1,0 +1,17 @@
+{
+  "indices": [
+    { "symbol": "^GSPC", "name": "S&P 500" },
+    { "symbol": "^IXIC", "name": "那斯達克綜合指數" },
+    { "symbol": "^DJI", "name": "道瓊工業指數" }
+  ],
+  "watchlist": [
+    { "symbol": "NVDA", "name": "輝達", "category": "must_watch" },
+    { "symbol": "TSM", "name": "台積電ADR", "category": "must_watch" },
+    { "symbol": "AAPL", "name": "蘋果", "category": "tech" },
+    { "symbol": "MSFT", "name": "微軟", "category": "tech" },
+    { "symbol": "GOOGL", "name": "Alphabet", "category": "tech" },
+    { "symbol": "AMZN", "name": "亞馬遜", "category": "tech" },
+    { "symbol": "META", "name": "Meta", "category": "tech" },
+    { "symbol": "AMD", "name": "超微", "category": "tech" }
+  ]
+}

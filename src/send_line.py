@@ -1,12 +1,16 @@
-"""Push the generated weekly report to one or more LINE targets (users or groups)."""
+"""Push the generated weekly report to one or more LINE targets (users or groups).
+
+Usage: python src/send_line.py [path-to-report.txt]   (defaults to output/report.txt)
+"""
 
 import os
 import pathlib
+import sys
 
 import requests
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
-REPORT_PATH = BASE_DIR / "output" / "report.txt"
+DEFAULT_REPORT_PATH = BASE_DIR / "output" / "report.txt"
 
 LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
 
@@ -30,7 +34,8 @@ def main() -> None:
     if not target_ids:
         raise RuntimeError("LINE_PUSH_TARGET_IDS is empty")
 
-    report_text = REPORT_PATH.read_text(encoding="utf-8")
+    report_path = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_REPORT_PATH
+    report_text = report_path.read_text(encoding="utf-8")
 
     for target_id in target_ids:
         push_message(token, target_id, report_text)

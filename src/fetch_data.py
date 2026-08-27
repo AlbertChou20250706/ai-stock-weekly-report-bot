@@ -35,17 +35,21 @@ def main() -> None:
     index_data = fetch_weekly_change(watchlist["index"]["symbol"])
     index_data["name"] = watchlist["index"]["name"]
 
-    etfs = []
-    for etf in watchlist["etfs"]:
+    must_watch = []
+    ranked_pool = []
+    for entry in watchlist["watchlist"]:
         try:
-            data = fetch_weekly_change(etf["symbol"])
+            data = fetch_weekly_change(entry["symbol"])
         except RuntimeError as exc:
-            print(f"warning: skipping {etf['symbol']}: {exc}")
+            print(f"warning: skipping {entry['symbol']}: {exc}")
             continue
-        data["name"] = etf["name"]
-        etfs.append(data)
+        data["name"] = entry["name"]
+        if entry.get("category") == "must_watch":
+            must_watch.append(data)
+        else:
+            ranked_pool.append(data)
 
-    etfs_sorted = sorted(etfs, key=lambda e: e["change_pct"], reverse=True)
+    ranked_sorted = sorted(ranked_pool, key=lambda e: e["change_pct"], reverse=True)
 
     result = {
         "date_range": {
@@ -53,8 +57,9 @@ def main() -> None:
             "end": index_data["date_end"],
         },
         "index": index_data,
-        "top_gainers": etfs_sorted[:5],
-        "top_losers": list(reversed(etfs_sorted[-5:])),
+        "must_watch": must_watch,
+        "top_gainers": ranked_sorted[:5],
+        "top_losers": list(reversed(ranked_sorted[-5:])),
     }
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

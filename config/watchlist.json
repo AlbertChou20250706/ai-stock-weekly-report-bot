@@ -1,14 +1,15 @@
 {
   "index": { "symbol": "^TWII", "name": "台灣加權指數" },
-  "etfs": [
-    { "symbol": "0050.TW", "name": "元大台灣50" },
-    { "symbol": "0056.TW", "name": "元大高股息" },
-    { "symbol": "006208.TW", "name": "富邦台50" },
-    { "symbol": "00878.TW", "name": "國泰永續高股息" },
-    { "symbol": "00919.TW", "name": "群益台灣精選高息" },
-    { "symbol": "00922.TW", "name": "國泰台灣領袖50" },
-    { "symbol": "00935.TW", "name": "野村臺灣新科技50" },
-    { "symbol": "00881.TW", "name": "國泰台灣5G+" },
-    { "symbol": "009816.TW", "name": "凱基台灣TOP50" }
+  "watchlist": [
+    { "symbol": "3706.TW", "name": "神達", "category": "must_watch" },
+    { "symbol": "00935.TW", "name": "野村臺灣新科技50", "category": "must_watch" },
+    { "symbol": "009816.TW", "name": "凱基台灣TOP50", "category": "must_watch" },
+    { "symbol": "0050.TW", "name": "元大台灣50", "category": "etf" },
+    { "symbol": "0056.TW", "name": "元大高股息", "category": "etf" },
+    { "symbol": "006208.TW", "name": "富邦台50", "category": "etf" },
+    { "symbol": "00878.TW", "name": "國泰永續高股息", "category": "etf" },
+    { "symbol": "00919.TW", "name": "群益台灣精選高息", "category": "etf" },
+    { "symbol": "00922.TW", "name": "國泰台灣領袖50", "category": "etf" },
+    { "symbol": "00881.TW", "name": "國泰台灣5G+", "category": "etf" }
   ]
 }

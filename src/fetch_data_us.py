@@ -15,15 +15,15 @@ def fetch_weekly_change(symbol: str) -> dict:
     if history.empty or len(history) < 2:
         raise RuntimeError(f"no usable price history for {symbol}")
 
-    first_close = float(history["Close"].iloc[0])
+    first_open = float(history["Open"].iloc[0])
     last_close = float(history["Close"].iloc[-1])
-    change_pct = (last_close - first_close) / first_close * 100
+    change_pct = (last_close - first_open) / first_open * 100
 
     return {
         "symbol": symbol,
         "date_start": history.index[0].strftime("%Y-%m-%d"),
         "date_end": history.index[-1].strftime("%Y-%m-%d"),
-        "open": round(float(history["Open"].iloc[0]), 2),
+        "open": round(first_open, 2),
         "close": round(last_close, 2),
         "change_pct": round(change_pct, 2),
     }

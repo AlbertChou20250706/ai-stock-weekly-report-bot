@@ -2,7 +2,7 @@ name: weekly-stock-report
 
 on:
   schedule:
-    - cron: '0 0 * * 1'   # UTC 週一 00:00 = 台灣週一 08:00
+    - cron: '0 22 * * 0'   # UTC 週日 22:00 = 台灣週一 06:00
   workflow_dispatch: {}
 
 permissions:

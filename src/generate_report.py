@@ -86,7 +86,14 @@ def format_institutional(inst: dict | None) -> str:
             parts.append(f"{label} {v:+,}張")
     total = inst.get("total")
     joined = "、".join(parts)
-    return f"（三大法人：{joined}，合計 {total:+,}張）" if joined else ""
+    if not joined:
+        return ""
+    days_matched = inst.get("days_matched")
+    days_requested = inst.get("days_requested")
+    period_label = f"近{days_matched}個交易日合計" if days_matched else "本週合計"
+    if days_matched and days_requested and days_matched < days_requested:
+        period_label += "，資料未全"
+    return f"（三大法人{period_label}：{joined}，合計 {total:+,}張）"
 
 
 def render_markdown(parsed: dict, date_range: dict) -> str:

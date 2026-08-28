@@ -5,18 +5,21 @@ import pathlib
 
 import yfinance as yf
 
-from twse_institutional import fetch_institutional_flow
+from twse_institutional import fetch_institutional_flow_range
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 WATCHLIST_PATH = BASE_DIR / "config" / "watchlist.json"
 OUTPUT_PATH = BASE_DIR / "data" / "latest.json"
 
 
-def fetch_weekly_change(symbol: str) -> dict:
+def fetch_history(symbol: str):
     history = yf.Ticker(symbol).history(period="6d")
     if history.empty or len(history) < 2:
         raise RuntimeError(f"no usable price history for {symbol}")
+    return history
 
+
+def summarize_weekly_change(symbol: str, history) -> dict:
     first_open = float(history["Open"].iloc[0])
     last_close = float(history["Close"].iloc[-1])
     change_pct = (last_close - first_open) / first_open * 100
@@ -38,20 +41,28 @@ def fetch_weekly_change(symbol: str) -> dict:
 def main() -> None:
     watchlist = json.loads(WATCHLIST_PATH.read_text(encoding="utf-8"))
 
-    index_data = fetch_weekly_change(watchlist["index"]["symbol"])
+    index_history = fetch_history(watchlist["index"]["symbol"])
+    index_data = summarize_weekly_change(watchlist["index"]["symbol"], index_history)
     index_data["name"] = watchlist["index"]["name"]
 
     must_watch = []
     ranked_pool = []
     for entry in watchlist["watchlist"]:
         try:
-            data = fetch_weekly_change(entry["symbol"])
+            history = fetch_history(entry["symbol"])
         except RuntimeError as exc:
             print(f"warning: skipping {entry['symbol']}: {exc}")
             continue
+        data = summarize_weekly_change(entry["symbol"], history)
         data["name"] = entry["name"]
         if entry.get("category") == "must_watch":
-            data["institutional"] = fetch_institutional_flow(data["symbol"], data["date_end"])
+            # Institutional flow is published per trading day, never as a
+            # weekly aggregate, so sum the actual trading days this report's
+            # price change covers (history.index) rather than taking just
+            # the latest single day, which would be an unrepresentative
+            # one-day snapshot rather than "this week's" institutional flow.
+            trading_dates = [d.strftime("%Y-%m-%d") for d in history.index]
+            data["institutional"] = fetch_institutional_flow_range(data["symbol"], trading_dates)
             must_watch.append(data)
         else:
             ranked_pool.append(data)

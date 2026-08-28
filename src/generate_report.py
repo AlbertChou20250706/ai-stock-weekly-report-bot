@@ -68,11 +68,36 @@ def parse_sections(text: str) -> dict | None:
     }
 
 
+def attach_institutional(tracked: list, must_watch: list) -> None:
+    """Match code-fetched TWSE institutional flow (never model-generated) onto
+    each parsed tracked-stock row, by symbol."""
+    by_symbol = {m["symbol"]: m.get("institutional") for m in must_watch}
+    for t in tracked:
+        t["institutional"] = by_symbol.get(t["symbol"])
+
+
+def format_institutional(inst: dict | None) -> str:
+    if not inst or inst.get("total") is None:
+        return ""
+    parts = []
+    for label, key in [("外資", "foreign"), ("投信", "trust"), ("自營", "dealer")]:
+        v = inst.get(key)
+        if v is not None:
+            parts.append(f"{label} {v:+,}張")
+    total = inst.get("total")
+    joined = "、".join(parts)
+    return f"（三大法人：{joined}，合計 {total:+,}張）" if joined else ""
+
+
 def render_markdown(parsed: dict, date_range: dict) -> str:
     lines = [f"台股週報（{date_range['start']} - {date_range['end']}）", ""]
     lines += ["一、本週市場總結", parsed["summary"], ""]
     lines += ["二、追蹤股代號動態"]
-    lines += [f"{t['symbol']} {t['name']}：{t['change_pct']}%，收在 {t['price']} 元" for t in parsed["tracked"]]
+    lines += [
+        f"{t['symbol']} {t['name']}：{t['change_pct']}%，收在 {t['price']} 元"
+        f"{format_institutional(t.get('institutional'))}"
+        for t in parsed["tracked"]
+    ]
     lines += [""]
     lines += ["三、產業／ETF 亮點"] + parsed["highlights"] + [""]
     lines += ["四、風險提示"] + parsed["risks"] + [""]
@@ -131,6 +156,7 @@ def main() -> None:
     parsed["title"] = "台股週報"
     parsed["date_range"] = market_data["date_range"]
     parsed["index"] = market_data["index"]
+    attach_institutional(parsed["tracked"], market_data["must_watch"])
 
     archive_text = render_markdown(parsed, market_data["date_range"])
     archive_path.write_text(archive_text, encoding="utf-8")

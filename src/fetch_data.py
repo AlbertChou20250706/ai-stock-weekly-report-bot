@@ -5,6 +5,8 @@ import pathlib
 
 import yfinance as yf
 
+from twse_institutional import fetch_institutional_flow
+
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 WATCHLIST_PATH = BASE_DIR / "config" / "watchlist.json"
 OUTPUT_PATH = BASE_DIR / "data" / "latest.json"
@@ -49,6 +51,7 @@ def main() -> None:
             continue
         data["name"] = entry["name"]
         if entry.get("category") == "must_watch":
+            data["institutional"] = fetch_institutional_flow(data["symbol"], data["date_end"])
             must_watch.append(data)
         else:
             ranked_pool.append(data)

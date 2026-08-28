@@ -44,17 +44,41 @@ def section_title(label: str) -> dict:
     return text(label, weight="bold", size="md", margin="lg", color=INK)
 
 
+def institutional_line(inst: dict | None) -> dict | None:
+    if not inst or inst.get("total") is None:
+        return None
+    parts = []
+    for label, key in [("外資", "foreign"), ("投信", "trust"), ("自營", "dealer")]:
+        v = inst.get(key)
+        if v is not None:
+            parts.append(f"{label} {v:+,}")
+    if not parts:
+        return None
+    total = inst["total"]
+    return text(
+        f"三大法人（張）：{' / '.join(parts)} ｜ 合計 {total:+,}",
+        size="xxs",
+        color=change_color(str(total)) if total != 0 else MUTED,
+        margin="xs",
+    )
+
+
 def tracked_row(t: dict) -> dict:
-    return {
-        "type": "box",
-        "layout": "horizontal",
-        "margin": "sm",
-        "contents": [
-            text(f"{t['symbol']} {t['name']}", size="sm", color=INK, flex=3),
-            text(f"{t['change_pct']}%", size="sm", align="end", weight="bold", color=change_color(t["change_pct"]), flex=1),
-            text(f"{t['price']} 元", size="sm", align="end", color=MUTED, flex=2),
-        ],
-    }
+    contents = [
+        {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+                text(f"{t['symbol']} {t['name']}", size="sm", color=INK, flex=3),
+                text(f"{t['change_pct']}%", size="sm", align="end", weight="bold", color=change_color(t["change_pct"]), flex=1),
+                text(f"{t['price']} 元", size="sm", align="end", color=MUTED, flex=2),
+            ],
+        }
+    ]
+    inst_line = institutional_line(t.get("institutional"))
+    if inst_line:
+        contents.append(inst_line)
+    return {"type": "box", "layout": "vertical", "margin": "sm", "paddingBottom": "sm", "contents": contents}
 
 
 def bullet(content: str) -> dict:

@@ -12,10 +12,16 @@ CHARTS_DIR = BASE_DIR / "charts"
 INDEX_SYMBOL = "^TWII"
 LOOKBACK_DAYS = "1mo"
 
+# GitHub Actions' ubuntu-latest has no CJK font by default; without this the
+# Chinese title renders as tofu boxes (font installed via apt in the workflow:
+# fonts-wqy-zenhei). Plain pyplot.rcParams doesn't work here — mplfinance
+# builds its own rc context from the style, so the font must be set via
+# make_mpf_style(rc=...) instead.
 TW_STYLE = mpf.make_mpf_style(
     marketcolors=mpf.make_marketcolors(up="red", down="green", inherit=True),
     gridstyle="",
     facecolor="white",
+    rc={"font.sans-serif": ["WenQuanYi Zen Hei"], "axes.unicode_minus": False},
 )
 
 

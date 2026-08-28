@@ -20,7 +20,11 @@ def fetch_weekly_change(symbol: str) -> dict:
     change_pct = (last_close - first_open) / first_open * 100
 
     return {
-        "symbol": symbol,
+        # LINE auto-linkifies "NNNN.TW" as if it were a domain name (.TW is a
+        # real ccTLD), turning stock codes into broken clickable links in the
+        # message. Strip the yfinance suffix for display; it's only needed
+        # for the API call above.
+        "symbol": symbol.removesuffix(".TW").removesuffix(".TWO"),
         "date_start": history.index[0].strftime("%Y-%m-%d"),
         "date_end": history.index[-1].strftime("%Y-%m-%d"),
         "open": round(first_open, 2),

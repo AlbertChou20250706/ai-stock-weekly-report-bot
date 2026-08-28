@@ -1,9 +1,8 @@
-"""Push the generated weekly report to one or more LINE targets (users or groups).
+"""Push a generated report to one or more LINE targets (users or groups).
 
-Usage: python src/send_line.py [path-to-report.txt]
-  - No argument: send output/flex_message.json as a Flex Message if present,
-    otherwise fall back to output/report.txt as plain text.
-  - With an argument: always send that file as plain text (used by the US report).
+Usage: python src/send_line.py [tw|us]   (default: tw)
+Sends output/flex_message[_us].json as a Flex Message if present, otherwise
+falls back to output/report[_us].txt as plain text.
 """
 
 import json
@@ -15,10 +14,13 @@ import requests
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "output"
-DEFAULT_REPORT_PATH = OUTPUT_DIR / "report.txt"
-FLEX_PATH = OUTPUT_DIR / "flex_message.json"
 
 LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
+
+REPORTS = {
+    "tw": {"flex": OUTPUT_DIR / "flex_message.json", "text": OUTPUT_DIR / "report.txt"},
+    "us": {"flex": OUTPUT_DIR / "flex_message_us.json", "text": OUTPUT_DIR / "report_us.txt"},
+}
 
 
 def push(token: str, target_id: str, message: dict) -> None:
@@ -40,12 +42,15 @@ def main() -> None:
     if not target_ids:
         raise RuntimeError("LINE_PUSH_TARGET_IDS is empty")
 
-    if len(sys.argv) > 1:
-        message = {"type": "text", "text": pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")}
-    elif FLEX_PATH.exists():
-        message = json.loads(FLEX_PATH.read_text(encoding="utf-8"))
+    market = sys.argv[1] if len(sys.argv) > 1 else "tw"
+    if market not in REPORTS:
+        raise RuntimeError(f"unknown market {market!r}, expected one of {list(REPORTS)}")
+
+    paths = REPORTS[market]
+    if paths["flex"].exists():
+        message = json.loads(paths["flex"].read_text(encoding="utf-8"))
     else:
-        message = {"type": "text", "text": DEFAULT_REPORT_PATH.read_text(encoding="utf-8")}
+        message = {"type": "text", "text": paths["text"].read_text(encoding="utf-8")}
 
     for target_id in target_ids:
         push(token, target_id, message)

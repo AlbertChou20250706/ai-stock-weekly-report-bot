@@ -21,23 +21,44 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Install CJK font for chart titles
+        run: sudo apt-get update && sudo apt-get install -y fonts-wqy-zenhei
+
       - run: python src/fetch_data_us.py
+
+      - run: python src/generate_chart_us.py
+
+      - name: Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - run: git add charts/
+
+      - name: Commit chart if changed
+        run: git diff --staged --quiet || git commit -m "US chart $(date +%F)"
+
+      - name: Push chart (retry on race; must land before the Flex Message references it)
+        run: |
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push rejected, pulling and retrying ($i)..."
+            git pull --rebase origin main
+          done
+          git push
 
       - name: Generate report
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python src/generate_report_us.py
 
+      - run: python src/build_flex_us.py
+
       - name: Send to LINE
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_PUSH_TARGET_IDS: ${{ secrets.LINE_PUSH_TARGET_IDS }}
-        run: python src/send_line.py output/report_us.txt
-
-      - name: Archive report
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+        run: python src/send_line.py us
 
       - run: git add reports/
 

@@ -115,7 +115,7 @@ def main() -> None:
     system_prompt = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
 
     client = anthropic.Anthropic()
-    response = client.messages.create(
+    request_kwargs = dict(
         model=MODEL,
         max_tokens=16000,
         output_config={"effort": "medium"},
@@ -124,6 +124,11 @@ def main() -> None:
             "type": "web_search_20260209",
             "name": "web_search",
             "max_uses": 3,
+            # Anthropic's crawler accessibility to a given domain can change
+            # over time (robots.txt / bot-blocking on the site's end); a
+            # domain it currently can't reach makes the whole request fail
+            # with a 400, not just that one search. See the except clause
+            # below for the fallback that keeps a report going out anyway.
             "allowed_domains": [
                 "tw.stock.yahoo.com",
                 "cnyes.com",
@@ -135,6 +140,15 @@ def main() -> None:
         }],
         messages=[{"role": "user", "content": build_user_content(market_data)}],
     )
+    try:
+        response = client.messages.create(**request_kwargs)
+    except anthropic.BadRequestError as exc:
+        if "not accessible to our user agent" in str(exc):
+            print(f"warning: web_search domain access error, retrying without web_search: {exc}")
+            request_kwargs.pop("tools")
+            response = client.messages.create(**request_kwargs)
+        else:
+            raise
 
     raw_text = "".join(block.text for block in response.content if block.type == "text").strip()
 

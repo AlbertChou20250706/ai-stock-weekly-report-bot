@@ -41,7 +41,19 @@ def main() -> None:
         max_tokens=16000,
         output_config={"effort": "medium"},
         system=system_prompt,
-        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 3}],
+        tools=[{
+            "type": "web_search_20260209",
+            "name": "web_search",
+            "max_uses": 3,
+            "allowed_domains": [
+                "reuters.com",
+                "bloomberg.com",
+                "wsj.com",
+                "cnbc.com",
+                "marketwatch.com",
+                "finance.yahoo.com",
+            ],
+        }],
         messages=[{"role": "user", "content": build_user_content(market_data)}],
     )
 

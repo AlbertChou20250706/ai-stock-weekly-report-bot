@@ -1,8 +1,12 @@
 """Push the generated weekly report to one or more LINE targets (users or groups).
 
-Usage: python src/send_line.py [path-to-report.txt]   (defaults to output/report.txt)
+Usage: python src/send_line.py [path-to-report.txt]
+  - No argument: send output/flex_message.json as a Flex Message if present,
+    otherwise fall back to output/report.txt as plain text.
+  - With an argument: always send that file as plain text (used by the US report).
 """
 
+import json
 import os
 import pathlib
 import sys
@@ -10,19 +14,21 @@ import sys
 import requests
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
-DEFAULT_REPORT_PATH = BASE_DIR / "output" / "report.txt"
+OUTPUT_DIR = BASE_DIR / "output"
+DEFAULT_REPORT_PATH = OUTPUT_DIR / "report.txt"
+FLEX_PATH = OUTPUT_DIR / "flex_message.json"
 
 LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
 
 
-def push_message(token: str, target_id: str, text: str) -> None:
+def push(token: str, target_id: str, message: dict) -> None:
     response = requests.post(
         LINE_PUSH_URL,
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         },
-        json={"to": target_id, "messages": [{"type": "text", "text": text}]},
+        json={"to": target_id, "messages": [message]},
         timeout=30,
     )
     response.raise_for_status()
@@ -34,11 +40,15 @@ def main() -> None:
     if not target_ids:
         raise RuntimeError("LINE_PUSH_TARGET_IDS is empty")
 
-    report_path = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_REPORT_PATH
-    report_text = report_path.read_text(encoding="utf-8")
+    if len(sys.argv) > 1:
+        message = {"type": "text", "text": pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")}
+    elif FLEX_PATH.exists():
+        message = json.loads(FLEX_PATH.read_text(encoding="utf-8"))
+    else:
+        message = {"type": "text", "text": DEFAULT_REPORT_PATH.read_text(encoding="utf-8")}
 
     for target_id in target_ids:
-        push_message(token, target_id, report_text)
+        push(token, target_id, message)
         print(f"sent to {target_id}")
 
 

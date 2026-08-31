@@ -1,6 +1,7 @@
 """Fetch weekly market data and write it as structured JSON for generate_report.py."""
 
 import json
+import math
 import pathlib
 
 import yfinance as yf
@@ -22,6 +23,13 @@ def fetch_history(symbol: str):
 def summarize_weekly_change(symbol: str, history) -> dict:
     first_open = float(history["Open"].iloc[0])
     last_close = float(history["Close"].iloc[-1])
+    # yfinance can return NaN for a single row (data-provider gap) without
+    # raising anything — NaN silently survives the arithmetic below and, once
+    # JSON-serialized as a bare `NaN` token, reads to the model like a missing
+    # value, which it then renders as literal "NA" in the report. Treat it as
+    # the same failure as no usable history at all, not a value to pass on.
+    if not (math.isfinite(first_open) and math.isfinite(last_close)):
+        raise RuntimeError(f"non-finite price data for {symbol} (open={first_open}, close={last_close})")
     change_pct = (last_close - first_open) / first_open * 100
 
     return {

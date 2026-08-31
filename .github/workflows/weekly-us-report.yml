@@ -3,7 +3,7 @@ name: weekly-us-report
 on:
   schedule:
     # 暫時改成每天發送，方便測試期間快速找問題；穩定後記得改回每週一
-    - cron: '0 21 * * *'   # UTC 每日 21:00 = 台灣每日 05:00
+    - cron: '20 21 * * *'   # UTC 每日 21:20 = 台灣每日 05:20
   workflow_dispatch: {}
 
 permissions:

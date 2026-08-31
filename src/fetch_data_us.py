@@ -10,11 +10,21 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 WATCHLIST_PATH = BASE_DIR / "config" / "watchlist_us.json"
 OUTPUT_PATH = BASE_DIR / "data" / "latest_us.json"
 
+WEEK_TRADING_DAYS = 5
+
 
 def fetch_weekly_change(symbol: str) -> dict:
-    history = yf.Ticker(symbol).history(period="6d")
-    if history.empty or len(history) < 2:
+    # period="Nd" counts calendar days, not trading days — querying on a
+    # weekend or right after a holiday can silently return more (or fewer)
+    # trading rows than intended (e.g. a Sunday-night query, which is what
+    # every Monday-morning Taipei run is in US market time, reaching back to
+    # the week before last instead of just last week). Fetch a generous
+    # calendar buffer instead and explicitly slice to exactly one trading
+    # week below, so the window is stable no matter what day/time this runs.
+    history = yf.Ticker(symbol).history(period="1mo")
+    if history.empty or len(history) < WEEK_TRADING_DAYS:
         raise RuntimeError(f"no usable price history for {symbol}")
+    history = history.tail(WEEK_TRADING_DAYS)
 
     first_open = float(history["Open"].iloc[0])
     last_close = float(history["Close"].iloc[-1])

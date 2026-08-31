@@ -12,12 +12,20 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 WATCHLIST_PATH = BASE_DIR / "config" / "watchlist.json"
 OUTPUT_PATH = BASE_DIR / "data" / "latest.json"
 
+WEEK_TRADING_DAYS = 5
+
 
 def fetch_history(symbol: str):
-    history = yf.Ticker(symbol).history(period="6d")
-    if history.empty or len(history) < 2:
+    # period="Nd" counts calendar days, not trading days — querying on a
+    # weekend or right after a holiday can silently return more (or fewer)
+    # trading rows than intended (e.g. a Sunday query reaching back to the
+    # week before last instead of just last week). Fetch a generous
+    # calendar buffer instead and explicitly slice to exactly one trading
+    # week below, so the window is stable no matter what day/time this runs.
+    history = yf.Ticker(symbol).history(period="1mo")
+    if history.empty or len(history) < WEEK_TRADING_DAYS:
         raise RuntimeError(f"no usable price history for {symbol}")
-    return history
+    return history.tail(WEEK_TRADING_DAYS)
 
 
 def summarize_weekly_change(symbol: str, history) -> dict:

@@ -66,10 +66,10 @@ def main() -> None:
     for entry in watchlist["watchlist"]:
         try:
             history = fetch_history(entry["symbol"])
+            data = summarize_weekly_change(entry["symbol"], history)
         except RuntimeError as exc:
             print(f"warning: skipping {entry['symbol']}: {exc}")
             continue
-        data = summarize_weekly_change(entry["symbol"], history)
         data["name"] = entry["name"]
         if entry.get("category") == "must_watch":
             # Institutional flow is published per trading day, never as a

@@ -22,6 +22,13 @@ def fetch_weekly_change(symbol: str) -> dict:
     # calendar buffer instead and explicitly slice to exactly one trading
     # week below, so the window is stable no matter what day/time this runs.
     history = yf.Ticker(symbol).history(period="1mo")
+    # Yahoo's feed can settle the official EOD close later for some
+    # instruments (ETFs in particular) than for others — the most recent
+    # session can already appear as a row with Open filled in but Close
+    # still NaN. Drop any such not-yet-settled trailing rows and fall back
+    # to the last settled day, instead of discarding the whole ticker.
+    while not history.empty and not math.isfinite(history["Close"].iloc[-1]):
+        history = history.iloc[:-1]
     if history.empty or len(history) < WEEK_TRADING_DAYS:
         raise RuntimeError(f"no usable price history for {symbol}")
     history = history.tail(WEEK_TRADING_DAYS)

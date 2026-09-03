@@ -13,8 +13,8 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "output"
 DATA_PATH = OUTPUT_DIR / "report_us_data.json"
 
-UP_COLOR = "#2E7D32"    # US convention: green = up
-DOWN_COLOR = "#D32F2F"  # US convention: red = down
+UP_COLOR = "#D32F2F"    # TW convention (kept consistent with the TW report): red = up
+DOWN_COLOR = "#2E7D32"  # TW convention (kept consistent with the TW report): green = down
 HEADER_BG = "#1A2942"
 MUTED = "#666666"
 INK = "#222222"

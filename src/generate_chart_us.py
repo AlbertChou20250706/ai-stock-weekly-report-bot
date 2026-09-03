@@ -15,10 +15,11 @@ LOOKBACK_DAYS = "1mo"
 
 # Same CJK font fix as generate_chart.py: mplfinance builds its own rc
 # context from the style, so the font must go through make_mpf_style(rc=...)
-# rather than plain pyplot.rcParams. US convention: green = up, red = down
-# (opposite of the TW chart's red-up/green-down).
+# rather than plain pyplot.rcParams. Colors kept consistent with the TW
+# chart (red = up, green = down) rather than the US market's own red-down
+# convention, per user request, so both reports read the same way.
 US_STYLE = mpf.make_mpf_style(
-    marketcolors=mpf.make_marketcolors(up="green", down="red", inherit=True),
+    marketcolors=mpf.make_marketcolors(up="red", down="green", inherit=True),
     gridstyle="",
     facecolor="white",
     rc={"font.sans-serif": ["WenQuanYi Zen Hei"], "axes.unicode_minus": False},

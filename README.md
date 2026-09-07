@@ -27,12 +27,14 @@ src/notify_failure.py     任一步驟失敗時，發一則簡短告警訊息
 
 | Workflow | 排程（台灣時間） | 內容 |
 |---|---|---|
-| `weekly-stock-report.yml` | 每週一 06:00 | 台股週報（大盤指數＋必看代號＋ETF漲跌幅排行）|
-| `weekly-us-report.yml` | 每週一 07:30 | 美股週報（S&P500／那斯達克／道瓊三大指數＋必看代號 NVDA、TSM ADR＋科技股漲跌幅排行）|
+| `weekly-stock-report.yml` | 每週一 05:00 | 台股週報（大盤指數＋必看代號＋ETF漲跌幅排行）|
+| `weekly-us-report.yml` | 每週一 05:20 | 美股週報（S&P500／那斯達克／道瓊三大指數＋必看代號 NVDA、TSM ADR＋科技股漲跌幅排行）|
 
-## 目前狀態：個人測試模式
+（`stock-committee-bot` 那個獨立 repo 的委員會報告排在中間，每週一 05:10，三份報告錯開發送。）
 
-`LINE_PUSH_TARGET_IDS` 目前應該填**你自己的 LINE User ID**（U 開頭），先驗證整條流程穩定，之後才切換成正式群組的 Group ID（C 開頭，可用逗號分隔多個）。詳見 content-hub 那篇規劃文件的「Bot 與群組導入策略」。
+## 目前狀態：正式群組推播
+
+`LINE_PUSH_TARGET_IDS` 目前設定為 LINE 群組的 Group ID（C 開頭），週報直接推播到群組，不再發給個人 LINE。測試期間發現的資料問題（ETF 收盤價未結算時被誤判為無效資料、NaN 導致文字顯示「NA」等）都已修復；美股報告的漲跌顏色也已改成跟台股一致的「紅漲綠跌」。
 
 ## 設定 GitHub Secrets
 
@@ -42,7 +44,7 @@ Settings → Secrets and variables → Actions，新增：
 |---|---|
 | `ANTHROPIC_API_KEY` | Claude API key |
 | `LINE_CHANNEL_ACCESS_TOKEN` | 沿用既有 ChouAP.Cloud channel 的 long-lived token |
-| `LINE_PUSH_TARGET_IDS` | 個人測試階段填自己的 User ID；正式階段換成群組 Group ID（逗號分隔多個） |
+| `LINE_PUSH_TARGET_IDS` | 推播對象，LINE User ID（U 開頭）或 Group ID（C 開頭），可逗號分隔多個 |
 
 ## 本機測試
 
@@ -54,12 +56,14 @@ export $(cat .env | xargs)   # 或用你習慣的方式載入環境變數
 # 台股
 python src/fetch_data.py
 python src/generate_report.py
-python src/send_line.py
+python src/build_flex.py
+python src/send_line.py tw
 
 # 美股
 python src/fetch_data_us.py
 python src/generate_report_us.py
-python src/send_line.py output/report_us.txt
+python src/build_flex_us.py
+python src/send_line.py us
 ```
 
 ## 資料來源

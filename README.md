@@ -27,10 +27,10 @@ src/notify_failure.py     任一步驟失敗時，發一則簡短告警訊息
 
 | Workflow | 排程（台灣時間） | 內容 |
 |---|---|---|
-| `weekly-stock-report.yml` | 每週一 05:00 | 台股週報（大盤指數＋必看代號＋ETF漲跌幅排行）|
-| `weekly-us-report.yml` | 每週一 05:20 | 美股週報（S&P500／那斯達克／道瓊三大指數＋必看代號 NVDA、TSM ADR＋科技股漲跌幅排行）|
+| `weekly-stock-report.yml` | 每週一 04:00 | 台股週報（大盤指數＋必看代號＋ETF漲跌幅排行）|
+| `weekly-us-report.yml` | 每週一 04:20 | 美股週報（S&P500／那斯達克／道瓊三大指數＋必看代號 NVDA、TSM ADR＋科技股漲跌幅排行）|
 
-（`stock-committee-bot` 那個獨立 repo 的委員會報告排在中間，每週一 05:10，三份報告錯開發送。）
+（`stock-committee-bot` 那個獨立 repo 的委員會報告排在中間，每週一 04:10，三份報告錯開發送。）
 
 ## 目前狀態：正式群組推播
 

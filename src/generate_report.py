@@ -4,12 +4,11 @@ delimiter format, so a report still goes out either way.
 """
 
 import json
-import os
 import pathlib
 import re
 from datetime import date
 
-import anthropic
+from claude_cli import call_claude
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = BASE_DIR / "data" / "latest.json"
@@ -17,8 +16,16 @@ SYSTEM_PROMPT_PATH = BASE_DIR / "prompts" / "system_prompt.md"
 ARCHIVE_DIR = BASE_DIR / "reports"
 OUTPUT_DIR = BASE_DIR / "output"
 
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
 DISCLAIMER = "投資一定有風險，基金/ETF/股票投資有賺有賠，以上資訊非投資建議"
+
+WEB_SEARCH_DOMAINS = [
+    "tw.stock.yahoo.com",
+    "cnyes.com",
+    "money.udn.com",
+    "ctee.com.tw",
+    "moneydj.com",
+    "wantgoo.com",
+]
 
 SECTION_RE = re.compile(r"^##([A-Z]+)##\s*$", re.MULTILINE)
 
@@ -121,43 +128,7 @@ def main() -> None:
     market_data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
     system_prompt = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
 
-    client = anthropic.Anthropic()
-    request_kwargs = dict(
-        model=MODEL,
-        max_tokens=16000,
-        output_config={"effort": "medium"},
-        system=system_prompt,
-        tools=[{
-            "type": "web_search_20260209",
-            "name": "web_search",
-            "max_uses": 3,
-            # Anthropic's crawler accessibility to a given domain can change
-            # over time (robots.txt / bot-blocking on the site's end); a
-            # domain it currently can't reach makes the whole request fail
-            # with a 400, not just that one search. See the except clause
-            # below for the fallback that keeps a report going out anyway.
-            "allowed_domains": [
-                "tw.stock.yahoo.com",
-                "cnyes.com",
-                "money.udn.com",
-                "ctee.com.tw",
-                "moneydj.com",
-                "wantgoo.com",
-            ],
-        }],
-        messages=[{"role": "user", "content": build_user_content(market_data)}],
-    )
-    try:
-        response = client.messages.create(**request_kwargs)
-    except anthropic.BadRequestError as exc:
-        if "not accessible to our user agent" in str(exc):
-            print(f"warning: web_search domain access error, retrying without web_search: {exc}")
-            request_kwargs.pop("tools")
-            response = client.messages.create(**request_kwargs)
-        else:
-            raise
-
-    raw_text = "".join(block.text for block in response.content if block.type == "text").strip()
+    raw_text = call_claude(system_prompt, build_user_content(market_data), allowed_domains=WEB_SEARCH_DOMAINS)
 
     ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
